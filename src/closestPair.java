@@ -1,44 +1,16 @@
-import java.util.*;
-import java.lang.*;
+import java.util.Arrays;
+import java.util.Random;
+import java.util.Scanner;
 
 public class closestPair {
 
-    private static Random randomGenerator;  // for random numbers
-
-    public static class Point implements Comparable<Point> {
-
-        public int x, y;
-
-        // Constructor
-        public Point(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        public int compareTo(Point p) {
-            // compare this and p and there are three results: >0, ==0, or <0
-            if (this.x == p.x) return (this.y - p.y);
-            else return (this.x - p.x);
-        }
-
-        public String toString() {
-            return " ("+Integer.toString(this.x)+","+Integer.toString(this.y)+")";
-        }
-
-        public double distance(Point p) {
-            int dx = (this.x - p.x);
-            int dy = (this.y - p.y);
-            return Math.sqrt(dx*dx + dy*dy);
-        }
-    }
-
     public static Point[] plane;
-
     public static int N;   // number of points in the plane
+    private static Random randomGenerator;  // for random numbers
 
     public static void main(String[] args) {
 
-        // Read in the Size of a maze
+        // Read in the Size of a plane
         Scanner scan = new Scanner(System.in);
         try {
             System.out.println("How many points in your plane? ");
@@ -77,9 +49,17 @@ public class closestPair {
     static double minDisSimple() {
         // A straightforward method for computing the distance
         // of the two closest points in plane[0..N-1].
+        double minimumDistance = plane[0].distance(plane[1]);
 
-        // to be completed
-        return 0.0;
+        for (int i = 0; i < N - 1; i++) {
+            double nextDist = plane[i].distance(plane[i + 1]);
+
+            if (nextDist < minimumDistance) {
+                minimumDistance = nextDist;
+
+            }
+        }
+        return minimumDistance;
     }
 
     static void exchange(int i, int j) {
@@ -111,6 +91,33 @@ public class closestPair {
         } else {  // 4 or more points: Divide and conquer
             // to be completed
             return 0.0;
+        }
+    }
+
+    public static class Point implements Comparable<Point> {
+
+        public int x, y;
+
+        // Constructor
+        public Point(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        public int compareTo(Point p) {
+            // compare this and p and there are three results: >0, ==0, or <0
+            if (this.x == p.x) return (this.y - p.y);
+            else return (this.x - p.x);
+        }
+
+        public String toString() {
+            return " (" + Integer.toString(this.x) + "," + Integer.toString(this.y) + ")";
+        }
+
+        public double distance(Point p) {
+            int dx = (this.x - p.x);
+            int dy = (this.y - p.y);
+            return Math.sqrt(dx * dx + dy * dy);
         }
     }
 }
