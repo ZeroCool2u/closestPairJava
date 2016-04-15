@@ -7,6 +7,7 @@ public class closestPair {
     public static Point[] plane;
     public static int N;   // number of points in the plane
     public static int trials;
+    public static int debug;
     private static Random randomGenerator;  // for random numbers
 
     public static void main(String[] args) {
@@ -19,6 +20,9 @@ public class closestPair {
 
             System.out.print("Please enter the number of trials you would like to run all tests : ");
             trials = scan.nextInt();
+
+            System.out.print("Enable debugging? (1 for True, 0 for False) ");
+            debug = scan.nextInt();
         }
         catch(Exception ex){
             ex.printStackTrace();
@@ -83,8 +87,11 @@ public class closestPair {
     static double minDisSimple() {
         // A straightforward method for computing the distance
         // of the two closest points in plane[0..N-1].
-        for (int i = 0; i < N; i++) {
-            System.out.print("Point " + i + " : " + plane[i] + " ");
+
+        if (debug == 1) {
+            for (int i = 0; i < N; i++) {
+                System.out.print("Point " + i + " : " + plane[i] + " ");
+            }
         }
 
         System.out.println();
@@ -109,9 +116,10 @@ public class closestPair {
     }
 
     static double minDisDivideConquer(int low, int high) {
-        // Pre: points in plane[0..N-1] are sorted by x-coordinate and high > low.
-        // Post: return the minimal distance of any pair of points in plane[low..high];
-        //       and make sure points in plane[low..high] are sorted by y-coordinate.
+        /** Pre: points in plane[0..N-1] are sorted by x-coordinate and high > low.
+         * Post: return the minimal distance of any pair of points in plane[low..high];
+         *       and make sure points in plane[low..high] are sorted by y-coordinate.
+         */
         // Hint: On the top of page 195 of the textbook, it suggests to use array Y which keeps
         //       a copy of points sorted by y-coordinate. An alternative is to keep the points
         //       sorted by y-coordinate using the idea of merge sort.
@@ -129,7 +137,7 @@ public class closestPair {
             double d3 = plane[low+1].distance(plane[high]);
             return ((d1 < d2)? ((d1 < d3)? d1 : d3) : (d2 < d3)? d2 : d3);  // return min(d1, d2, d3)
         } else {  // 4 or more points: Divide and conquer
-            // to be completed
+            //TODO: Complete 4 or more point divide and conquer call.
             return 0.0;
         }
     }
