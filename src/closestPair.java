@@ -83,13 +83,20 @@ public class closestPair {
     static double minDisSimple() {
         // A straightforward method for computing the distance
         // of the two closest points in plane[0..N-1].
+        for (int i = 0; i < N; i++) {
+            System.out.print("Point " + i + " : " + plane[i] + " ");
+        }
+
+        System.out.println();
+
         double minimumDistance = plane[0].distance(plane[1]);
 
         for (int i = 0; i < N - 1; i++) {
-            double nextDist = plane[i].distance(plane[i + 1]);
-
-            if (nextDist < minimumDistance) {
-                minimumDistance = nextDist;
+            for (int j = 0; j < N - 1; j++) {
+                double nextDist = plane[j].distance(plane[j + 1]);
+                if (nextDist < minimumDistance) {
+                    minimumDistance = nextDist;
+                }
             }
         }
         return minimumDistance;
