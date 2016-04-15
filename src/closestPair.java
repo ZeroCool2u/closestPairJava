@@ -6,6 +6,7 @@ public class closestPair {
 
     public static Point[] plane;
     public static int N;   // number of points in the plane
+    public static int trials;
     private static Random randomGenerator;  // for random numbers
 
     public static void main(String[] args) {
@@ -15,35 +16,68 @@ public class closestPair {
         try {
             System.out.println("How many points in your plane? ");
             N = scan.nextInt();
+
+            System.out.print("Please enter the number of trials you would like to run all tests : ");
+            trials = scan.nextInt();
         }
         catch(Exception ex){
             ex.printStackTrace();
         }
         scan.close();
 
-        // Create plane of N points.
-        plane = new Point[N];
-        randomGenerator = new Random();
+        long minDisSimpleAveTime = 0;
+        long minDisDivideConquerAveTime = 0;
 
-        for (int i = 0; i < N; ++i) {
-            int x = randomGenerator.nextInt(N<<6);
-            int y = randomGenerator.nextInt(N<<6);
-            plane[i] = new Point(x, y);
+        long startTime = System.currentTimeMillis();
+
+        for (int t = 0; t < trials; t++) {
+
+            // Create plane of N points.
+            plane = new Point[N];
+            randomGenerator = new Random();
+
+            for (int i = 0; i < N; ++i) {
+                int x = randomGenerator.nextInt(N << 6);
+                int y = randomGenerator.nextInt(N << 6);
+                plane[i] = new Point(x, y);
+            }
+            Arrays.sort(plane); // sort points according to compareTo.
+            for (int i = 1; i < N; ++i)  // make all x's distinct.
+                if (plane[i - 1].x >= plane[i].x) plane[i].x = plane[i - 1].x + 1;
+
+            System.out.println(N + " points are randomly created.");
+            System.out.println("The first two points are" + plane[0] + " and" + plane[1]);
+            System.out.println("The distance of the first two points is " + plane[0].distance(plane[1]));
+
+            // Compute the minimal distance of any pair of points by exhaustive search.
+            long start = System.currentTimeMillis();
+            double min1 = minDisSimple();
+            long finish = System.currentTimeMillis();
+            minDisSimpleAveTime += finish - start;
+            System.out.println("The distance of the two closest points as computed by the simple method is " + min1);
+            System.out.println("Simple Method Compute Time: " + (finish - start) + " milliseconds.");
+
+
+            // Compute the minimal distance of any pair of points by divide-and-conquer
+            start = finish;
+            double min2 = minDisDivideConquer(0, N - 1);
+            System.out.println("The distance of the two closest points as computed by the optimal method is  " + min2);
+
+            System.out.println();
+            System.out.println("---------------------------- END OF TRIAL NUMBER: " + (t + 1) + " ----------------------------");
+            System.out.println();
+
+            System.out.println("---------------------------- OUTPUT SUMMARY ----------------------------");
+
+            System.out.println();
+
+            System.out.println("Initial Run Time Conditions:");
+            System.out.println("Number of points in the plane: " + N);
+            System.out.println("Number of Trial Runs: " + trials);
+
+            System.out.println();
+
         }
-        Arrays.sort(plane); // sort points according to compareTo.
-        for (int i = 1; i < N; ++i)  // make all x's distinct.
-            if (plane[i-1].x >= plane[i].x) plane[i].x = plane[i-1].x + 1;
-
-        System.out.println(N + " points are randomly created.");
-        System.out.println("The first two points are"+plane[0]+" and"+plane[1]);
-        System.out.println("The distance of the first two points is "+plane[0].distance(plane[1]));
-
-        // Compute the minimal distance of any pair of points by exhaustive search.
-        double min1 = minDisSimple();
-        System.out.println("The distance of the two closest points as computed by the simple method is "+min1);
-        // Compute the minimal distance of any pair of points by divide-and-conquer
-        double min2 = minDisDivideConquer(0, N-1);
-        System.out.println("The distance of the two closest points as computed by the optimal method is  "+min2);
     }
 
     static double minDisSimple() {
@@ -56,7 +90,6 @@ public class closestPair {
 
             if (nextDist < minimumDistance) {
                 minimumDistance = nextDist;
-
             }
         }
         return minimumDistance;
