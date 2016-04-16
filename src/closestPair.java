@@ -1,13 +1,17 @@
-import java.util.Arrays;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
+
+import static java.lang.Double.min;
+import static java.lang.Math.abs;
+import static java.lang.Math.sqrt;
 
 public class closestPair {
 
     public static Point[] plane;
+    public static Point[] pointsByY;
     public static int N;   // number of points in the plane
     public static int trials;
     public static int debug;
+    public static long callToD;
     private static Random randomGenerator;  // for random numbers
 
     public static void main(String[] args) {
@@ -49,23 +53,32 @@ public class closestPair {
             for (int i = 1; i < N; ++i)  // make all x's distinct.
                 if (plane[i - 1].x >= plane[i].x) plane[i].x = plane[i - 1].x + 1;
 
+            pointsByY = new Point[N]; //Create plane copy sorted by Y values.
+            for (int i = 0; i < N; i++) {
+                pointsByY[i] = new Point(plane[i].x, plane[i].y);
+            }
+            Arrays.sort(pointsByY, new PointYComp());
+
             System.out.println(N + " points are randomly created.");
             System.out.println("The first two points are" + plane[0] + " and" + plane[1]);
             System.out.println("The distance of the first two points is " + plane[0].distance(plane[1]));
 
             // Compute the minimal distance of any pair of points by exhaustive search.
             long start = System.currentTimeMillis();
-            double min1 = minDisSimple();
+            //double min1 = minDisSimple();
             long finish = System.currentTimeMillis();
             minDisSimpleAveTime += finish - start;
-            System.out.println("The distance of the two closest points as computed by the simple method is " + min1);
-            System.out.println("Simple Method Compute Time: " + (finish - start) + " milliseconds.");
+            //System.out.println("The distance of the two closest points as computed by the simple method is " + sqrt(min1));
+            System.out.println("Brute Force Time: " + (finish - start) + " milliseconds.");
 
 
             // Compute the minimal distance of any pair of points by divide-and-conquer
             start = finish;
             double min2 = minDisDivideConquer(0, N - 1);
-            System.out.println("The distance of the two closest points as computed by the optimal method is  " + min2);
+            finish = System.currentTimeMillis();
+            minDisDivideConquerAveTime += finish - start;
+            System.out.println("The distance of the two closest points as computed by the optimal method is  " + sqrt(min2));
+            System.out.println("Divide & Conquer Time: " + (finish - start) + " milliseconds.");
 
             System.out.println();
             System.out.println("---------------------------- END OF TRIAL NUMBER: " + (t + 1) + " ----------------------------");
@@ -78,6 +91,7 @@ public class closestPair {
             System.out.println("Initial Run Time Conditions:");
             System.out.println("Number of points in the plane: " + N);
             System.out.println("Number of Trial Runs: " + trials);
+            System.out.println("Total Number of Calls to Distance: " + callToD);
 
             System.out.println();
 
@@ -87,26 +101,19 @@ public class closestPair {
     static double minDisSimple() {
         // A straightforward method for computing the distance
         // of the two closest points in plane[0..N-1].
+        return minDisSimple(0, N - 1);
+    }
 
-        if (debug == 1) {
-            for (int i = 0; i < N; i++) {
-                System.out.print("Point " + i + " : " + plane[i] + " ");
+    static double minDisSimple(int low, int high) {
+        double min = plane[low].distance(plane[high]);
+        for (int i = low; i < high; i++) {
+            for (int j = i + 1; j < high + 1; j++) {
+                double d = plane[i].distance(plane[j]);
+                if (d < min)
+                    min = d;
             }
         }
-
-        System.out.println();
-
-        double minimumDistance = plane[0].distance(plane[1]);
-
-        for (int i = 0; i < N - 1; i++) {
-            for (int j = 0; j < N - 1; j++) {
-                double nextDist = plane[j].distance(plane[j + 1]);
-                if (nextDist < minimumDistance) {
-                    minimumDistance = nextDist;
-                }
-            }
-        }
-        return minimumDistance;
+        return min;
     }
 
     static void exchange(int i, int j) {
@@ -136,36 +143,80 @@ public class closestPair {
             double d2 = plane[low].distance(plane[low+1]);
             double d3 = plane[low+1].distance(plane[high]);
             return ((d1 < d2)? ((d1 < d3)? d1 : d3) : (d2 < d3)? d2 : d3);  // return min(d1, d2, d3)
+        } else if (high - low < 1000) {
+            return minDisSimple(low, high);
         } else {  // 4 or more points: Divide and conquer
-            //TODO: Complete 4 or more point divide and conquer call.
-            return 0.0;
+            int mid = (low + high) / 2;
+            long xcor = plane[mid].x;
+            double leftDelta = minDisDivideConquer(low, mid);
+            double rightDelta = minDisDivideConquer(mid + 1, high);
+            double delta = min(leftDelta, rightDelta);
+            ArrayList<Point> T = new ArrayList<Point>();
+
+            for (int i = 0; i <= N - 1; i++) {
+
+                if (abs(pointsByY[i].x - xcor) <= delta) {
+
+                    T.add(pointsByY[i]);
+
+                }
+            }
+            int k = T.size();
+
+            double deltaPrime = 2 * delta;
+
+            for (int i = 0; i < k - 1; i++) {
+
+                for (int j = i + 1; j < Math.min(i + 7, k); j++) {
+
+                    if (T.get(i).distance(T.get(j)) < deltaPrime) {
+
+                        deltaPrime = T.get(i).distance(T.get(j));
+
+                    }
+                }
+            }
+            delta = Math.min(delta, deltaPrime);
+
+            return delta;
         }
     }
 
     public static class Point implements Comparable<Point> {
 
-        public int x, y;
+        public long x, y;
 
         // Constructor
-        public Point(int x, int y) {
+        public Point(long x, long y) {
             this.x = x;
             this.y = y;
         }
 
         public int compareTo(Point p) {
             // compare this and p and there are three results: >0, ==0, or <0
-            if (this.x == p.x) return (this.y - p.y);
-            else return (this.x - p.x);
+            if (this.x == p.x)
+                if (this.y == p.y) return 0;
+                else return (this.y > p.y) ? 1 : -1;
+            else return (this.x > p.x) ? 1 : -1;
         }
 
         public String toString() {
-            return " (" + Integer.toString(this.x) + "," + Integer.toString(this.y) + ")";
+            return " (" + Long.toString(this.x) + "," + Long.toString(this.y) + ")";
         }
 
         public double distance(Point p) {
-            int dx = (this.x - p.x);
-            int dy = (this.y - p.y);
-            return Math.sqrt(dx * dx + dy * dy);
+            callToD++;
+            long dx = (this.x - p.x);
+            long dy = (this.y - p.y);
+            return dx * dx + dy * dy;
+        }
+    }
+
+    static class PointYComp implements Comparator<Point> {
+        public int compare(Point p, Point q) {
+            if (p.y < q.y) return -1;
+            if (p.y > q.y) return +1;
+            return 0;
         }
     }
 }
